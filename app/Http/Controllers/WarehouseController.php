@@ -29,4 +29,26 @@ class WarehouseController extends Controller
 
         return view('warehouse.index', compact('warehouses'));
     }
+    public function create()
+    {
+        $products = \App\Models\Product::all();
+        return view('warehouse.create', compact('products'));
+    }
+    public function store(Request $request)
+    {
+        $warehouse = Warehouse::create($request->only([
+            'name', 'code', 'branch_id', 'icon', 'is_active', 'manager_id', 'total_stock', 'min_stock', 'description'
+        ]));
+
+        // فرض بر اینکه مدل Item وجود دارد و هر انبار با محصولات از طریق Item رابطه دارد
+        foreach (\App\Models\Product::all() as $product) {
+            $warehouse->items()->create([
+                'product_id' => $product->id,
+                'stock' => 0, // مقدار اولیه موجودی
+                // سایر فیلدهای لازم را اینجا اضافه کن
+            ]);
+        }
+
+        return redirect()->route('warehouses.index')->with('success', 'انبار با موفقیت ایجاد شد و همه محصولات به آن اضافه شدند.');
+    }
 }
