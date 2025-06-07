@@ -347,5 +347,18 @@ Route::prefix('warehouse')->middleware('auth')->group(function() {
     Route::get('/reports', [WarehouseReportController::class, 'index'])->name('warehouse.reports'); // گزارشات انبار
 });
 Route::post('/warehouse/bulk-action', [WarehouseController::class, 'bulkAction'])->name('warehouse.bulkAction');
+Route::resource('warehouses', \App\Http\Controllers\WarehouseController::class);
+
+
+Route::resource('warehouses', \App\Http\Controllers\WarehouseController::class);
+
+
+
+
+
+
+
+
+
 
 require __DIR__.'/auth.php';
