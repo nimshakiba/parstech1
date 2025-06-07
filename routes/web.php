@@ -37,6 +37,7 @@ use App\Http\Controllers\BackupController;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\WarehouseItemController;
 
 // بخش های غیر از دسته بندی بدون تغییر -------------------------------
 Route::resource('persons', PersonController::class);
@@ -355,6 +356,8 @@ Route::resource('warehouses', \App\Http\Controllers\WarehouseController::class);
 Route::resource('warehouses', \App\Http\Controllers\WarehouseController::class)->except(['show']);
 
 
+
+Route::get('warehouses/{warehouse}/items', [WarehouseItemController::class, 'index'])->name('warehouse.items');
 
 
 
