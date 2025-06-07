@@ -78,7 +78,7 @@
                                 @else
                                     <i class="fas fa-warehouse fa-lg text-secondary"></i>
                                 @endif
-                                <a href="{{ route('warehouse.show', $warehouse) }}" class="fw-bold">
+                                <a href="{{ route('warehouses.show', $warehouse) }}" class="fw-bold">
                                     {{ $warehouse->name }}
                                 </a>
                             </td>
