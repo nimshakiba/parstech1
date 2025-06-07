@@ -57,6 +57,42 @@
                     @endif
                 </ul>
             </div>
+
+            <!-- منوی پروفایل کاربر -->
+            @auth
+            <div class="dropdown ms-2">
+                <a href="#" class="d-flex align-items-center nav-link dropdown-toggle p-0" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('img/user.png') }}"
+                         alt="پروفایل"
+                         class="rounded-circle"
+                         width="38"
+                         height="38"
+                         style="object-fit:cover;">
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                            <i class="fas fa-user-edit me-2"></i> پروفایل من
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('settings.company') }}">
+                            <i class="fas fa-cog me-2"></i> تنظیمات
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-header').submit();">
+                            <i class="fas fa-sign-out-alt me-2"></i> خروج
+                        </a>
+                        <form id="logout-form-header" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            @endauth
+
         </div>
     </div>
 </nav>
@@ -69,3 +105,4 @@
 <script>
 window.hourlySales = @json($hourlySales);
 </script>
+

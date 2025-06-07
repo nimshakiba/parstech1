@@ -54,6 +54,52 @@
                     <li><a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.index') ? 'active' : '' }}"><i class="fas fa-list-ul icon-blue"></i> لیست دسته‌بندی</a></li>
                 </ul>
             </li>
+            <li class="has-submenu {{ request()->is('warehouse*') ? 'open' : '' }}">
+                <a href="#">
+                    <i class="sidebar-icon icon-orange"
+                       data-icon-day="fa-duotone fa-warehouse"
+                       data-icon-night="fa-solid fa-warehouse"></i>
+                    <span>انبارداری</span>
+                    <i class="fas fa-angle-left submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li>
+                        <a href="{{ route('warehouse.index') }}" class="{{ request()->routeIs('warehouse.index') ? 'active' : '' }}">
+                            <i class="fas fa-warehouse icon-orange"></i> مدیریت انبارها
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('warehouse.receipts') }}" class="{{ request()->routeIs('warehouse.receipts') ? 'active' : '' }}">
+                            <i class="fas fa-arrow-circle-down icon-green"></i> رسید ورود کالا
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('warehouse.issues') }}" class="{{ request()->routeIs('warehouse.issues') ? 'active' : '' }}">
+                            <i class="fas fa-arrow-circle-up icon-red"></i> حواله خروج کالا
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('warehouse.transfers') }}" class="{{ request()->routeIs('warehouse.transfers') ? 'active' : '' }}">
+                            <i class="fas fa-exchange-alt icon-cyan"></i> انتقال بین انبارها
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('warehouse.inventory') }}" class="{{ request()->routeIs('warehouse.inventory') ? 'active' : '' }}">
+                            <i class="fas fa-clipboard-list icon-blue"></i> موجودی و کارت کالا
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('warehouse.stocktaking') }}" class="{{ request()->routeIs('warehouse.stocktaking') ? 'active' : '' }}">
+                            <i class="fas fa-check-double icon-purple"></i> انبارگردانی
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('warehouse.reports') }}" class="{{ request()->routeIs('warehouse.reports') ? 'active' : '' }}">
+                            <i class="fas fa-chart-bar icon-indigo"></i> گزارشات انبار
+                        </a>
+                    </li>
+                </ul>
+            </li>
             <li class="has-submenu {{ request()->is('persons*') ? 'open' : '' }}">
                 <a href="#">
                     <i class="fas fa-users sidebar-icon icon-cyan"></i>

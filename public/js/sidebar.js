@@ -1,96 +1,150 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // تنظیم منوی کاربر
-    const userMenuToggle = document.getElementById('userMenuToggle');
-    const userMenuDropdown = document.getElementById('userMenuDropdown');
+class ThemeSwitcher {
+    constructor() {
+        this.theme = localStorage.getItem('theme') || 'light';
+        this.icons = {
+            light: {
+                dashboard: 'sun',
+                products: 'box',
+                persons: 'users',
+                sales: 'shopping-cart',
+                accounting: 'calculator',
+                financial: 'coins',
+                reports: 'chart-bar',
+                settings: 'cog'
+            },
+            dark: {
+                dashboard: 'moon',
+                products: 'boxes',
+                persons: 'user-friends',
+                sales: 'cart-plus',
+                accounting: 'book',
+                financial: 'wallet',
+                reports: 'chart-line',
+                settings: 'cogs'
+            }
+        };
+        this.init();
+    }
 
-    if (userMenuToggle && userMenuDropdown) {
-        userMenuToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            userMenuDropdown.style.display =
-                userMenuDropdown.style.display === 'none' ||
-                userMenuDropdown.style.display === '' ? 'block' : 'none';
-        });
+    init() {
+        document.documentElement.setAttribute('data-theme', this.theme);
+        this.updateIcons();
+        this.setupEventListeners();
+    }
 
-        // بستن منو با کلیک خارج از آن
-        document.addEventListener('click', function(e) {
-            if (!userMenuToggle.contains(e.target) && !userMenuDropdown.contains(e.target)) {
-                userMenuDropdown.style.display = 'none';
+    updateIcons() {
+        const currentIcons = this.icons[this.theme];
+        document.querySelectorAll('[data-icon]').forEach(element => {
+            const iconType = element.getAttribute('data-icon');
+            if (currentIcons[iconType]) {
+                element.className = `fas fa-${currentIcons[iconType]} sidebar-icon`;
             }
         });
     }
 
-    // مدیریت منوهای سایدبار
-    const sidebarMenu = document.getElementById('sidebar-menu');
-    if (sidebarMenu) {
-        const menuLinks = sidebarMenu.querySelectorAll('.has-treeview > a');
+    toggleTheme() {
+        this.theme = this.theme === 'light' ? 'dark' : 'light';
+        localStorage.setItem('theme', this.theme);
+        document.documentElement.setAttribute('data-theme', this.theme);
+        this.updateIcons();
+    }
 
-        menuLinks.forEach(function(link) {
-            link.addEventListener('click', function(e) {
+    setupEventListeners() {
+        // Add theme toggle button event listener if exists
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+    }
+}
+
+class Sidebar {
+    constructor() {
+        this.sidebar = document.querySelector('.custom-sidebar');
+        this.toggleBtn = document.getElementById('sidebarToggleBtn');
+        this.submenuItems = document.querySelectorAll('.has-submenu > a');
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.setupSubmenuHandlers();
+        this.checkScreenSize();
+        this.loadSidebarState();
+    }
+
+    setupEventListeners() {
+        // Toggle sidebar
+        this.toggleBtn?.addEventListener('click', () => this.toggleSidebar());
+
+        // Close sidebar on outside click (mobile)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                if (!this.sidebar.contains(e.target) && !this.toggleBtn.contains(e.target)) {
+                    this.sidebar.classList.remove('sidebar-visible');
+                }
+            }
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', () => this.checkScreenSize());
+    }
+
+    setupSubmenuHandlers() {
+        this.submenuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
                 e.preventDefault();
-                const parentLi = this.parentElement;
-                const wasOpen = parentLi.classList.contains('menu-open');
+                const parent = item.parentElement;
+                const isOpen = parent.classList.contains('open');
 
-                // بستن سایر منوها
-                sidebarMenu.querySelectorAll('.has-treeview.menu-open').forEach(function(item) {
-                    if (item !== parentLi) {
-                        item.classList.remove('menu-open');
+                // Close all other open submenus
+                this.submenuItems.forEach(other => {
+                    if (other !== item) {
+                        other.parentElement.classList.remove('open');
                     }
                 });
 
-                // تغییر وضعیت منوی فعلی
-                parentLi.classList.toggle('menu-open');
-
-                // انیمیشن نرم برای باز/بسته شدن
-                const submenu = parentLi.querySelector('.nav-treeview');
-                if (submenu) {
-                    if (!wasOpen) {
-                        submenu.style.display = 'block';
-                        submenu.style.maxHeight = submenu.scrollHeight + 'px';
-                    } else {
-                        submenu.style.maxHeight = '0';
-                        setTimeout(() => {
-                            submenu.style.display = 'none';
-                        }, 200);
-                    }
-                }
+                // Toggle current submenu
+                parent.classList.toggle('open', !isOpen);
             });
         });
     }
 
-    // مدیریت نمایش سایدبار در موبایل
-    const toggleButtons = document.querySelectorAll('[data-widget="pushmenu"]');
+    toggleSidebar() {
+        document.body.classList.toggle('sidebar-collapsed');
+        this.saveSidebarState();
 
-    toggleButtons.forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.body.classList.toggle('sidebar-open');
-        });
-    });
-
-    // بستن سایدبار در موبایل با کلیک خارج از آن
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 991.98) {
-            const sidebar = document.querySelector('.main-sidebar');
-            const toggleButton = document.querySelector('[data-widget="pushmenu"]');
-
-            if (!sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
-                document.body.classList.remove('sidebar-open');
-            }
+        // Close all submenus when collapsing
+        if (document.body.classList.contains('sidebar-collapsed')) {
+            this.submenuItems.forEach(item => {
+                item.parentElement.classList.remove('open');
+            });
         }
-    });
+    }
 
-    // تنظیم منوی فعال بر اساس URL
-    const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.nav-sidebar .nav-link');
-
-    navLinks.forEach(function(link) {
-        if (link.getAttribute('href') && currentPath.includes(link.getAttribute('href'))) {
-            link.classList.add('active');
-
-            const treeview = link.closest('.nav-treeview');
-            if (treeview) {
-                treeview.parentElement.classList.add('menu-open');
-            }
+    checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            document.body.classList.remove('sidebar-collapsed');
+            this.sidebar.classList.add('mobile');
+        } else {
+            this.sidebar.classList.remove('mobile');
+            this.loadSidebarState();
         }
-    });
+    }
+
+    saveSidebarState() {
+        localStorage.setItem('sidebarCollapsed',
+            document.body.classList.contains('sidebar-collapsed'));
+    }
+
+    loadSidebarState() {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new ThemeSwitcher();
+    new Sidebar();
 });

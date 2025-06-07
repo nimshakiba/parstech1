@@ -36,6 +36,7 @@ use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\BackupController;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
+use App\Http\Controllers\WarehouseController;
 
 // بخش های غیر از دسته بندی بدون تغییر -------------------------------
 Route::resource('persons', PersonController::class);
@@ -329,5 +330,22 @@ Route::prefix('sales')->name('sales.')->group(function () {
 // برای دسته‌بندی‌ها اگر لازم است
 Route::get('/api/categories', [CategoryController::class, 'apiList']);
 Route::get('/categories/list', [CategoryController::class, 'list']);
+// انبارداری
+Route::prefix('warehouse')->middleware('auth')->group(function() {
+    Route::get('/', [WarehouseController::class, 'index'])->name('warehouse.index'); // مدیریت انبارها (لیست)
+    Route::get('/create', [WarehouseController::class, 'create'])->name('warehouse.create'); // فرم افزودن انبار جدید
+    Route::post('/', [WarehouseController::class, 'store'])->name('warehouse.store'); // ثبت انبار جدید
+    Route::get('/{warehouse}/edit', [WarehouseController::class, 'edit'])->name('warehouse.edit'); // ویرایش انبار
+    Route::put('/{warehouse}', [WarehouseController::class, 'update'])->name('warehouse.update'); // بروزرسانی انبار
+    Route::delete('/{warehouse}', [WarehouseController::class, 'destroy'])->name('warehouse.destroy'); // حذف انبار
+
+    Route::get('/receipts', [WarehouseReceiptController::class, 'index'])->name('warehouse.receipts'); // رسید ورود کالا
+    Route::get('/issues', [WarehouseIssueController::class, 'index'])->name('warehouse.issues'); // حواله خروج کالا
+    Route::get('/transfers', [WarehouseTransferController::class, 'index'])->name('warehouse.transfers'); // انتقال بین انبارها
+    Route::get('/inventory', [WarehouseInventoryController::class, 'index'])->name('warehouse.inventory'); // موجودی و کارت کالا
+    Route::get('/stocktaking', [WarehouseStocktakingController::class, 'index'])->name('warehouse.stocktaking'); // انبارگردانی
+    Route::get('/reports', [WarehouseReportController::class, 'index'])->name('warehouse.reports'); // گزارشات انبار
+});
+Route::post('/warehouse/bulk-action', [WarehouseController::class, 'bulkAction'])->name('warehouse.bulkAction');
 
 require __DIR__.'/auth.php';

@@ -1,135 +1,198 @@
-// استیکی هدر با مخفی شدن هنگام اسکرول به پایین و ظاهر شدن هنگام اسکرول بالا
 document.addEventListener('DOMContentLoaded', function() {
-    var prevScrollPos = window.scrollY;
-    var header = document.getElementById('main-header');
+    // نمایش چارت فروش
+    const salesSummary = document.querySelector('.sales-summary');
+    const salesChartPopup = document.getElementById('sales-chart-popup');
+    let salesChart = null;
 
-    // نوتیف محصولات با موجودی کم
-    var notifBadge = document.getElementById('notif-badge');
-    var notifMarkSeenBtn = document.getElementById('notif-mark-seen-btn');
-    var notifProductItems = document.querySelectorAll('.notif-product-item');
-    var notifDropdown = document.getElementById('notif-dropdown');
+    if(salesSummary && salesChartPopup) {
+        let popupTimeout;
 
-    // جمع آیدی محصولات کم موجودی فعلی
-    var productIds = [];
-    notifProductItems.forEach(function(el){
-        var pid = el.getAttribute('data-product-id');
-        if(pid) productIds.push(pid);
-    });
-
-    // آی‌دی‌هایی که کاربر قبلا دیده (در localStorage)
-    var seenIds = [];
-    try {
-        seenIds = JSON.parse(localStorage.getItem('lowStockSeen')) || [];
-    } catch(e) {
-        seenIds = [];
-    }
-
-    // فقط محصولات جدید (که کاربر ندیده) را نوتیف کن
-    var unseenIds = productIds.filter(id => !seenIds.includes(id));
-
-    // اگر تعداد محصولات ندیده > 0 نوتیف نشون بده
-    if(notifBadge) {
-        if(unseenIds.length > 0) {
-            notifBadge.innerText = unseenIds.length;
-            notifBadge.style.display = '';
-            if(notifMarkSeenBtn) notifMarkSeenBtn.style.display = '';
-            // فقط آیتم‌های ندیده را نمایش بده
-            notifProductItems.forEach(function(el){
-                if(!unseenIds.includes(el.getAttribute('data-product-id'))) el.style.display = 'none';
-            });
-        } else {
-            notifBadge.style.display = 'none';
-            if(notifMarkSeenBtn) notifMarkSeenBtn.style.display = 'none';
-            notifProductItems.forEach(function(el){
-                el.style.display = 'none';
-            });
-        }
-    }
-
-    // روی دکمه "متوجه شدم" کلیک شود: آی‌دی محصولات فعلی به seen اضافه شود
-    if(notifMarkSeenBtn) {
-        notifMarkSeenBtn.addEventListener('click', function(){
-            var allSeen = Array.from(new Set(seenIds.concat(unseenIds)));
-            localStorage.setItem('lowStockSeen', JSON.stringify(allSeen));
-            if(notifBadge) notifBadge.style.display = 'none';
-            notifProductItems.forEach(function(el){
-                el.style.display = 'none';
-            });
-            notifMarkSeenBtn.style.display = 'none';
-        });
-    }
-
-    // همیشه استیکی باشه
-    if(header) {
-        window.addEventListener('scroll', function() {
-            var currentScrollPos = window.scrollY;
-            if (currentScrollPos > prevScrollPos && currentScrollPos > 80) {
-                header.style.top = '-80px';
-            } else {
-                header.style.top = '0';
-            }
-            prevScrollPos = currentScrollPos;
-        });
-        header.style.position = 'sticky';
-        header.style.top = '0';
-        header.style.width = '100%';
-        header.style.zIndex = '1030';
-    }
-
-    // ApexCharts فروش ساعتی (نمایش با hover)
-    var salesSummary = document.querySelector('.sales-summary');
-    var salesChartPopup = document.getElementById('sales-chart-popup');
-    var chartRendered = false;
-
-    if(salesSummary && salesChartPopup){
-        salesSummary.addEventListener('mouseenter', function(){
+        salesSummary.addEventListener('mouseenter', function() {
+            clearTimeout(popupTimeout);
             salesChartPopup.style.display = 'block';
-            if(!chartRendered){
-                renderSalesHourlyChart();
-                chartRendered = true;
+            if(!salesChart) {
+                updateSalesChart();
             }
         });
-        salesSummary.addEventListener('mouseleave', function(){
-            salesChartPopup.style.display = 'none';
+
+        salesSummary.addEventListener('mouseleave', function() {
+            popupTimeout = setTimeout(() => {
+                salesChartPopup.style.display = 'none';
+            }, 300);
+        });
+
+        salesChartPopup.addEventListener('mouseenter', function() {
+            clearTimeout(popupTimeout);
+        });
+
+        salesChartPopup.addEventListener('mouseleave', function() {
+            popupTimeout = setTimeout(() => {
+                salesChartPopup.style.display = 'none';
+            }, 300);
         });
     }
 
-    function renderSalesHourlyChart(){
-        if(typeof ApexCharts === 'undefined' || !window.hourlySales) return;
-        // ساخت لیبل‌های ساعت
-        var hours = [];
-        for(var i=0; i<24; i++){
-            hours.push((i < 10 ? '0' : '') + i + ':00');
-        }
-        var chartOptions = {
-            chart: {
-                type: 'bar',
-                height: 210,
-                toolbar: { show: false },
-                fontFamily: 'Vazirmatn, Tahoma, Arial',
-            },
+    // رسم چارت فروش
+    function updateSalesChart() {
+        if (!window.hourlySales) return;
+
+        const isDark = document.body.classList.contains('dark-theme');
+        const hours = window.hourlySales.map(item => item.hour);
+        const sales = window.hourlySales.map(item => item.total);
+
+        const options = {
             series: [{
-                name: "فروش (تومان)",
-                data: window.hourlySales
+                name: 'فروش',
+                data: sales
             }],
-            xaxis: {
-                categories: hours,
-                labels: { style: { colors: '#5E5873', fontSize: '12px' } }
-            },
-            yaxis: {
-                labels: { style: { colors: "#5E5873" } }
-            },
-            colors: ["#00c6ff"],
-            fill: { type: 'gradient', gradient: { shade: 'light', type: "vertical", shadeIntensity: 0.4, gradientToColors: ["#0072ff"], inverseColors: false, opacityFrom: 0.8, opacityTo: 1, stops: [0, 100] } },
-            plotOptions: {
-                bar: { borderRadius: 6, columnWidth: '55%', distributed: true }
+            chart: {
+                type: 'area',
+                height: 210,
+                width: 330,
+                toolbar: { show: false },
+                fontFamily: 'inherit',
+                background: 'transparent',
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
             },
             tooltip: {
-                y: { formatter: function(val) { return val.toLocaleString() + ' تومان'; } }
+                theme: isDark ? 'dark' : 'light',
+                y: {
+                    formatter: function(value) {
+                        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' تومان';
+                    }
+                }
             },
-            grid: { show: true, borderColor: '#f1f1f1' }
+            xaxis: {
+                categories: hours,
+                labels: {
+                    style: {
+                        colors: isDark ? '#a0aec0' : '#666'
+                    }
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: isDark ? '#a0aec0' : '#666'
+                    },
+                    formatter: function(value) {
+                        return value >= 1000000 ?
+                            (value/1000000).toFixed(1) + 'M' :
+                            value >= 1000 ?
+                                (value/1000).toFixed(0) + 'K' : value;
+                    }
+                }
+            },
+            grid: {
+                borderColor: isDark ? '#2d3748' : '#e2e8f0',
+                strokeDashArray: 4
+            },
+            colors: ['#4CAF50'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100]
+                }
+            },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 }
         };
-        var chart = new ApexCharts(document.querySelector("#sales-hourly-chart"), chartOptions);
-        chart.render();
+
+        salesChart = new ApexCharts(document.getElementById('sales-hourly-chart'), options);
+        salesChart.render();
     }
+
+    // مدیریت نوتیفیکیشن‌ها
+    const notifDropdown = document.getElementById('notif-dropdown');
+    const notifBadge = document.getElementById('notif-badge');
+    const markSeenBtn = document.getElementById('notif-mark-seen-btn');
+
+    if(notifDropdown && notifBadge && markSeenBtn) {
+        const productItems = notifDropdown.querySelectorAll('.notif-product-item');
+
+        if(productItems.length > 0) {
+            notifBadge.style.display = 'block';
+            notifBadge.textContent = productItems.length;
+            markSeenBtn.style.display = 'block';
+        }
+
+        markSeenBtn.addEventListener('click', function() {
+            notifBadge.style.display = 'none';
+            markSeenBtn.style.display = 'none';
+
+            const seenProducts = Array.from(productItems).map(item =>
+                item.dataset.productId
+            );
+            localStorage.setItem('seenLowStockProducts', JSON.stringify(seenProducts));
+        });
+
+        // بررسی محصولات دیده شده
+        const seenProducts = JSON.parse(localStorage.getItem('seenLowStockProducts') || '[]');
+        if(seenProducts.length > 0) {
+            let hasUnseenProducts = false;
+            productItems.forEach(item => {
+                if(!seenProducts.includes(item.dataset.productId)) {
+                    hasUnseenProducts = true;
+                }
+            });
+
+            if(!hasUnseenProducts) {
+                notifBadge.style.display = 'none';
+                markSeenBtn.style.display = 'none';
+            }
+        }
+    }
+
+    // مدیریت تغییر تم
+    const themeToggle = document.getElementById('theme-toggle');
+    if(themeToggle) {
+        // بررسی و اعمال تم ذخیره شده
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.body.classList.toggle('dark-theme', savedTheme === 'dark');
+
+        themeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+            // بروزرسانی چارت در صورت نمایش
+            if(salesChart && salesChartPopup.style.display === 'block') {
+                salesChart.destroy();
+                salesChart = null;
+                updateSalesChart();
+            }
+
+            // انتشار رویداد تغییر تم
+            document.dispatchEvent(new CustomEvent('themeChanged', {
+                detail: { theme: isDark ? 'dark' : 'light' }
+            }));
+        });
+    }
+
+    // مدیریت ریسپانسیو
+    function handleResize() {
+        if(salesChart) {
+            const width = window.innerWidth <= 768 ? 280 : 330;
+            const height = window.innerWidth <= 768 ? 180 : 210;
+            salesChart.updateOptions({
+                chart: {
+                    width: width,
+                    height: height
+                }
+            });
+        }
+    }
+
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(handleResize, 250);
+    });
 });
